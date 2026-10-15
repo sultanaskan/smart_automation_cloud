@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081a23">
+  <title>Smart Automation · Cloud</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <section id="authScreen" class="auth-shell" hidden>
+    <div class="auth-brand">
+      <div class="brand-mark">SA</div><p class="eyebrow">SMART AUTOMATION · CLOUD</p>
+      <h1>Your workflows,<br><span>ready when you are.</span></h1>
+      <p class="muted auth-copy">Manage your account, subscriptions, wallet, and desktop access from one secure workspace.</p>
+      <div class="auth-note"><span class="status-dot"></span> Your batch data and uploaded workflow files stay on your computer.</div>
+    </div>
+    <div class="auth-card">
+      <form id="loginForm" class="stack-form">
+        <h2>Welcome back</h2><p class="muted">Sign in with your approved username and password.</p>
+        <label>Username<input name="username" autocomplete="username" required minlength="3" maxlength="80"></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="button primary wide">Sign in <span>→</span></button>
+      </form>
+      <div class="auth-divider"><span>OR</span></div>
+      <div id="googleSignIn" class="google-signin" aria-label="Continue with Google"></div>
+      <p id="googleSignInNote" class="tiny muted">Request a new account using your Google account. The administrator must approve it before you can sign in.</p>
+      <details class="public-signup"><summary>Create a new account request</summary><form id="signupForm" class="stack-form compact-form"><label>Full name<input name="displayName" required maxlength="120" autocomplete="name"></label><label>Username<input name="username" required minlength="3" maxlength="80" autocomplete="username" pattern="[A-Za-z0-9._-]+" title="Use letters, numbers, dots, underscores, or hyphens"></label><label>Gmail / email<input name="email" type="email" required maxlength="254" autocomplete="email"></label><label>Password<input name="password" type="password" required minlength="12" maxlength="72" autocomplete="new-password"></label><button class="button primary wide">Send account request <span>→</span></button><p class="tiny muted">The account is created only after administrator approval. Your password is stored as a secure hash.</p></form></details>
+      <p id="authMessage" class="form-message" aria-live="polite"></p>
+      <div class="auth-support"><strong>Contact the administrator</strong><a id="authWhatsApp" href="https://wa.me/880174614544" target="_blank" rel="noopener noreferrer">WhatsApp: 01746144544</a><a id="authEmail" href="mailto:sultanahmedaskan@gmail.com">Email: sultanahmedaskan@gmail.com</a></div>
+    </div>
+  </section>
+
+  <div id="appShell" class="app-shell" hidden>
+    <aside class="sidebar">
+      <a class="brand-lockup" href="#overview"><span class="brand-mark small">SA</span><span><strong>Smart Automation</strong><small>Cloud workspace</small></span></a>
+      <div class="side-label">WORKSPACE</div>
+      <nav id="userNav" class="side-nav">
+        <button class="nav-item active" data-view="overview"><span>◫</span>Overview</button>
+        <button class="nav-item" data-view="marketplace"><span>◇</span>Marketplace</button>
+        <button class="nav-item" data-view="subscriptions"><span>▣</span>Subscriptions</button>
+        <button class="nav-item" data-view="wallet"><span>◈</span>Wallet</button>
+        <button class="nav-item" data-view="requests"><span>↗</span>Package requests</button>
+        <button class="nav-item" data-view="downloads"><span>↓</span>Desktop app</button>
+        <button class="nav-item" data-view="account"><span>◎</span>Account</button>
+      </nav>
+      <div id="adminNavWrap" hidden><div class="side-label admin-label">ADMINISTRATION</div><nav class="side-nav"><button class="nav-item" data-view="admin"><span>⌘</span>Admin console</button></nav></div>
+      <div class="sidebar-bottom"><div class="secure-card"><span class="secure-icon">✓</span><div><strong>Secure by design</strong><small>Private account workspace</small></div></div><div class="sidebar-support"><strong>Need help?</strong><a href="https://wa.me/880174614544" target="_blank" rel="noopener noreferrer">WhatsApp · 01746144544</a><a href="mailto:sultanahmedaskan@gmail.com">Email the admin</a></div><small class="version-label">Smart Automation Cloud</small></div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div><p class="eyebrow" id="pageEyebrow">YOUR WORKSPACE</p><h1 id="pageTitle">Overview</h1></div>
+        <div class="top-actions"><div class="balance-chip"><span>Wallet</span><strong id="headerBalance">৳0.00</strong></div><div class="user-menu"><span class="avatar" id="userAvatar">U</span><span class="user-meta"><strong id="headerName">User</strong><small id="headerRole">Member</small></span><button id="logoutButton" class="icon-button" title="Sign out" aria-label="Sign out">↗</button></div></div>
+      </header>
+
+      <section id="view-overview" class="view active">
+        <div class="welcome-row"><div><p class="eyebrow">ACCOUNT SNAPSHOT</p><h2 id="welcomeTitle">Welcome back</h2><p class="muted">Your subscriptions, wallet activity, and workflow access at a glance.</p></div><button class="button subtle" data-go="marketplace">Explore marketplace <span>→</span></button></div>
+        <div class="stat-grid"><article class="stat-card"><div class="stat-icon teal">▣</div><div><span>Active subscriptions</span><strong id="statSubscriptions">0</strong></div><small>Available to sync</small></article><article class="stat-card"><div class="stat-icon violet">◈</div><div><span>Wallet balance</span><strong id="statBalance">৳0.00</strong></div><small>Ready for purchases</small></article><article class="stat-card"><div class="stat-icon amber">↗</div><div><span>Pending requests</span><strong id="statRequests">0</strong></div><small>Waiting for review</small></article><article class="stat-card"><div class="stat-icon blue">↓</div><div><span>Desktop release</span><strong class="release-stat" id="statRelease">—</strong></div><small>Latest available version</small></article></div>
+        <div class="content-grid two-col"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">WORKFLOW ACCESS</p><h3>Your subscriptions</h3></div><button class="text-button" data-go="subscriptions">View all →</button></div><div id="overviewSubscriptions" class="compact-list"></div></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">NEXT STEP</p><h3>Browse workflows</h3></div><span class="panel-icon">◇</span></div><p class="muted">Find a workflow, choose a subscription term, and activate access with your wallet.</p><button class="button primary" data-go="marketplace">Open marketplace <span>→</span></button><div class="panel-footnote">No wallet balance? Submit a top-up request for admin review.</div></article></div>
+        <article class="panel activity-panel"><div class="panel-heading"><div><p class="eyebrow">RECENT ACTIVITY</p><h3>Wallet transactions</h3></div><button class="text-button" data-go="wallet">Open wallet →</button></div><div id="overviewLedger" class="activity-list"></div></article>
+        <section class="learning-center"><div class="section-intro"><div><p class="eyebrow">LEARNING CENTER</p><h2>Tutorials & updates</h2><p class="muted">Guides, videos, and articles shared by your administrator.</p></div></div><div class="learning-grid"><article class="panel learning-section"><div class="panel-heading"><div><p class="eyebrow">STEP BY STEP</p><h3>Tutorials</h3></div><span class="panel-icon">▤</span></div><div id="dashboardTutorials" class="learning-list"></div></article><article class="panel learning-section"><div class="panel-heading"><div><p class="eyebrow">WATCH & LEARN</p><h3>YouTube videos</h3></div><span class="panel-icon">▷</span></div><div id="dashboardVideos" class="learning-list"></div></article><article class="panel learning-section"><div class="panel-heading"><div><p class="eyebrow">FROM THE BLOG</p><h3>Blog posts</h3></div><span class="panel-icon">✎</span></div><div id="dashboardBlogs" class="learning-list"></div></article></div></section>
+      </section>
+
+      <section id="view-marketplace" class="view">
+        <div class="section-intro"><div><p class="eyebrow">WORKFLOW CATALOG</p><h2>Find your next workflow</h2><p class="muted">Buy individual workflows or curated packages. Access begins after you confirm the wallet purchase.</p></div><div class="catalog-filter"><span>⌕</span><input id="marketSearch" placeholder="Search workflows and packages" aria-label="Search marketplace"></div></div>
+        <div id="marketplaceContent" class="catalog-grid"></div>
+      </section>
+
+      <section id="view-subscriptions" class="view">
+        <div class="section-intro"><div><p class="eyebrow">YOUR ACCESS</p><h2>Subscriptions</h2><p class="muted">Access is time-limited. After it expires, renew it here using your wallet.</p></div></div>
+        <div id="subscriptionsContent" class="subscription-grid"></div>
+      </section>
+
+      <section id="view-wallet" class="view">
+        <div class="section-intro"><div><p class="eyebrow">WALLET</p><h2>Balance & transactions</h2><p class="muted">Request a top-up and include your payment reference. An administrator verifies it before crediting your balance.</p></div></div>
+        <div class="content-grid wallet-grid"><article class="wallet-hero"><span class="wallet-kicker">AVAILABLE BALANCE</span><strong id="walletBalance">৳0.00</strong><span class="wallet-note">Purchases are debited only when your wallet has enough funds.</span><div class="wallet-orbit">৳</div></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">REQUEST FUNDS</p><h3>Ask for a top-up</h3></div></div><form id="topupForm" class="stack-form compact-form"><label>Amount (BDT)<input name="amount" type="number" min="1" step="0.01" placeholder="500.00" required></label><label>Payment reference / note<textarea name="paymentReference" rows="3" maxlength="300" placeholder="Transaction ID or payment instructions" required></textarea></label><button class="button primary">Send request <span>→</span></button><p class="tiny muted">This app does not charge a payment method. The admin reviews the request and approves the credit.</p></form></article></div>
+        <div class="content-grid two-col wallet-lower"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">LEDGER</p><h3>Wallet activity</h3></div></div><div id="walletLedger" class="activity-list"></div></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">TOP-UP REVIEWS</p><h3>Request history</h3></div></div><div id="topupHistory" class="compact-list"></div></article></div>
+      </section>
+
+      <section id="view-requests" class="view">
+        <div class="section-intro"><div><p class="eyebrow">CUSTOM REQUESTS</p><h2>Request a package</h2><p class="muted">Tell the administrator which automation package you need. Requests do not automatically publish or charge your account.</p></div></div>
+        <div class="content-grid request-grid"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">NEW REQUEST</p><h3>Share what you need</h3></div></div><form id="packageRequestForm" class="stack-form compact-form"><label>Package name<input name="requestedName" maxlength="200" required placeholder="e.g. Appointment application bundle"></label><label>Requirements<textarea name="message" rows="5" maxlength="2000" required placeholder="Describe the workflow or package you are looking for"></textarea></label><button class="button primary">Send package request <span>→</span></button></form></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">YOUR SUBMISSIONS</p><h3>Request history</h3></div></div><div id="packageRequestHistory" class="compact-list"></div></article></div>
+      </section>
+
+      <section id="view-downloads" class="view">
+        <div class="section-intro"><div><p class="eyebrow">DESKTOP CLIENT</p><h2>Smart Automation for Windows</h2><p class="muted">Download the current desktop release and sign in with the same account to sync your purchased workflows.</p></div></div>
+        <div id="releaseCard" class="release-card"></div>
+        <div class="download-help"><span>ⓘ</span><p>Keep your batch inputs and workflow upload files on your computer. The cloud service shares workflow definitions and access only.</p></div>
+      </section>
+
+      <section id="view-account" class="view">
+        <div class="section-intro"><div><p class="eyebrow">PROFILE & SECURITY</p><h2>Account settings</h2><p class="muted">Update your display name or change your password.</p></div></div>
+        <div class="content-grid two-col"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">PROFILE</p><h3>Your details</h3></div></div><form id="profileForm" class="stack-form compact-form"><label>Username<input name="username" disabled></label><label>Display name<input name="displayName" maxlength="120"></label><button class="button primary">Save profile</button></form></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">SECURITY</p><h3 id="passwordHeading">Change password</h3></div></div><form id="passwordForm" class="stack-form compact-form"><label id="currentPasswordLabel">Current password<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>New password<input name="newPassword" type="password" minlength="12" autocomplete="new-password" required></label><button class="button secondary" id="passwordSubmit">Update password</button><p class="tiny muted" id="passwordHelp">For your security, password change signs out all devices.</p></form></article></div>
+      </section>
+
+      <section id="view-admin" class="view">
+        <div class="section-intro admin-intro"><div><p class="eyebrow">CONTROL CENTER</p><h2>Admin console</h2><p class="muted">Manage accounts, listings, wallet reviews, access, and desktop releases.</p></div><span class="admin-badge">ADMIN ACCESS</span></div>
+        <div class="admin-tabs" id="adminTabs"><button class="active" data-admin="users">Users</button><button data-admin="signups">Signup requests <b id="pendingSignupCount">0</b></button><button data-admin="listings">Marketplace</button><button data-admin="learning">Learning content</button><button data-admin="topups">Wallet reviews <b id="pendingTopupCount">0</b></button><button data-admin="requests">Package requests <b id="pendingRequestCount">0</b></button><button data-admin="grants">Access grants</button><button data-admin="releases">Desktop releases</button></div>
+
+        <div id="admin-users" class="admin-section active"><div class="content-grid two-col"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">CREATE ACCOUNT</p><h3>Add a user</h3></div></div><form id="adminUserForm" class="stack-form compact-form"><div class="form-pair"><label>Username<input name="username" required minlength="3" maxlength="80"></label><label>Role<select name="role"><option value="MEMBER">Member</option><option value="ADMIN">Admin</option></select></label></div><label>Display name<input name="displayName" maxlength="120"></label><label>Temporary password<input name="password" type="password" minlength="12" required></label><button class="button primary">Create account</button></form></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">ACCOUNT DIRECTORY</p><h3>Users</h3></div><button class="icon-button refresh-admin" title="Refresh users">↻</button></div><div id="adminUsers" class="table-wrap"></div></article></div></div>
+
+        <div id="admin-signups" class="admin-section"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">GOOGLE ACCOUNT APPROVAL</p><h3>Signup requests</h3></div><button class="icon-button refresh-admin" title="Refresh signup requests">↻</button></div><p class="muted">Approving a request creates the user account and wallet. The user can then sign in using the same verified Google account.</p><div id="adminSignupRequests" class="admin-card-list"></div></article></div>
+
+        <div id="admin-listings" class="admin-section"><div class="content-grid two-col"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">PUBLISH A WORKFLOW</p><h3>Upload a workflow listing</h3></div></div><form id="publishWorkflowForm" class="stack-form compact-form" enctype="multipart/form-data"><label>Workflow package<input name="packageFile" type="file" accept=".saworkflow,.zip" required></label><div class="form-pair"><label>Display name <span class="optional">Optional</span><input name="name" maxlength="200"></label><label>Price (BDT)<input name="price" type="number" min="0" step="0.01" value="0" required></label></div><label>Description<textarea name="description" rows="3" maxlength="4000"></textarea></label><div class="form-pair"><label>Subscription days<input name="durationDays" type="number" min="1" max="3650" value="30" required></label><label class="check-label"><input name="canEdit" type="checkbox" checked> Subscribers may edit</label></div><button class="button primary">Publish workflow</button><p class="tiny muted">Batch items and uploaded files are stripped before the definition is published.</p></form></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">CREATE A BUNDLE</p><h3>Publish a package</h3></div></div><form id="adminPackageForm" class="stack-form compact-form"><label>Package name<input name="name" maxlength="200" required></label><label>Description<textarea name="description" rows="2" maxlength="4000"></textarea></label><div class="form-pair"><label>Price (BDT)<input name="price" type="number" min="0" step="0.01" required></label><label>Subscription days<input name="durationDays" type="number" min="1" max="3650" value="30" required></label></div><label class="check-label"><input name="canEdit" type="checkbox" checked> Subscribers may edit included workflows</label><label>Include published workflows</label><div id="packageWorkflowChoices" class="choice-list"></div><button class="button primary">Publish package</button></form></article></div><article class="panel admin-list-panel"><div class="panel-heading"><div><p class="eyebrow">LIVE CATALOG</p><h3>Manage marketplace listings</h3></div><button class="icon-button refresh-admin" title="Refresh listings">↻</button></div><div id="adminListings" class="admin-card-list"></div></article></div>
+
+        <div id="admin-learning" class="admin-section"><div class="content-grid two-col"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">SHARE WITH USERS</p><h3>Publish learning content</h3></div></div><form id="learningContentForm" class="stack-form compact-form"><label>Content type<select name="contentType"><option value="TUTORIAL">Tutorial</option><option value="VIDEO">YouTube video</option><option value="BLOG">Blog post</option></select></label><label>Title<input name="title" maxlength="200" required></label><label>Short summary<textarea name="summary" rows="2" maxlength="500" placeholder="A short description shown on the dashboard"></textarea></label><label>Content or video notes<textarea name="body" rows="7" maxlength="20000" placeholder="Write tutorial or blog text. For videos, notes are optional."></textarea></label><label>HTTPS link or YouTube URL<input name="url" type="url" maxlength="1000" placeholder="https://youtu.be/…"></label><label class="check-label"><input name="published" type="checkbox" checked>Visible to users</label><button class="button primary">Publish content</button><p class="tiny muted">Video links must point to YouTube. Tutorial and blog text is shown as plain text.</p></form></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">CONTENT LIBRARY</p><h3>Manage tutorials, videos & posts</h3></div><button class="icon-button refresh-admin" title="Refresh content">↻</button></div><div id="adminLearningContent" class="admin-card-list"></div></article></div></div>
+
+        <div id="admin-topups" class="admin-section"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">MANUAL REVIEW</p><h3>Wallet top-up requests</h3></div></div><div id="adminTopups" class="admin-card-list"></div></article></div>
+        <div id="admin-requests" class="admin-section"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">CUSTOM PACKAGE INTEREST</p><h3>Package requests</h3></div></div><div id="adminRequests" class="admin-card-list"></div></article></div>
+
+        <div id="admin-grants" class="admin-section"><div class="content-grid two-col"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">COMPLIMENTARY ACCESS</p><h3>Grant temporary access</h3></div></div><form id="grantForm" class="stack-form compact-form"><label>User<select name="userId" required></select></label><label>Workflow<select name="workflowId" required></select></label><div class="form-pair"><label>Duration days<input name="durationDays" type="number" min="1" max="3650" value="30" required></label><div class="permission-choices"><label><input name="canView" type="checkbox" checked> View</label><label><input name="canRun" type="checkbox" checked> Run</label><label><input name="canEdit" type="checkbox"> Edit</label></div></div><button class="button primary">Grant access</button></form></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">MANUAL GRANTS</p><h3>Current access</h3></div></div><div id="adminGrants" class="admin-card-list"></div></article></div></div>
+
+        <div id="admin-releases" class="admin-section"><div class="content-grid two-col"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">DESKTOP DISTRIBUTION</p><h3>Publish installer</h3></div></div><form id="releaseForm" class="stack-form compact-form" enctype="multipart/form-data"><label>Installer file<input name="installer" type="file" accept=".exe,.msi,.dmg,.pkg,.AppImage,.zip" required></label><label>Version<input name="version" required maxlength="40" placeholder="1.0.0"></label><label>Release notes<textarea name="changelog" rows="4" maxlength="2000"></textarea></label><button class="button primary">Publish desktop release</button><p class="tiny muted">The uploaded installer is stored privately and can be downloaded by signed-in users.</p></form></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">RELEASE HISTORY</p><h3>Published versions</h3></div></div><div id="adminReleases" class="admin-card-list"></div></article></div></div>
+      </section>
+
+      <footer class="app-footer"><span>Smart Automation Cloud</span><span>Account, access, and billing controls</span></footer>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="purchaseDialog" class="purchase-dialog" aria-labelledby="purchaseDialogTitle"><div id="purchaseDialogContent"></div></dialog>
+</body>
+</html>
