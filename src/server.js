@@ -39,7 +39,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"], baseUri: ["'self'"], connectSrc: ["'self'", 'https://accounts.google.com', 'https://oauth2.googleapis.com'],
       fontSrc: ["'self'", 'data:'], formAction: ["'self'"], frameAncestors: ["'none'"],
-      imgSrc: ["'self'", 'data:', 'https://*.googleusercontent.com'], objectSrc: ["'none'"], scriptSrc: ["'self'", 'https://accounts.google.com'],
+      imgSrc: ["'self'", 'data:', 'https://*.googleusercontent.com', 'https://i.ytimg.com'], objectSrc: ["'none'"], scriptSrc: ["'self'", 'https://accounts.google.com'],
       frameSrc: ['https://accounts.google.com'], styleSrc: ["'self'", "'unsafe-inline'"], ...(process.env.NODE_ENV === 'production' ? { upgradeInsecureRequests: [] } : {})
     }
   },
@@ -640,6 +640,13 @@ app.post('/api/admin/signup-requests/:requestId/review', requireUser, requireAdm
     return { status: 'APPROVED', username, googleLinked: Boolean(request.google_sub) };
   });
   res.json({ ...result, message: decision === 'APPROVE' ? `Signup approved. The user can now sign in${result.googleLinked ? ' with the same Google account' : ' with the requested username and password'}.` : 'Signup request rejected.' });
+}));
+
+app.get('/api/admin/signup-requests', requireUser, requireAdmin, asyncRoute(async (_req, res) => {
+  const [rows] = await pool.query(`SELECT id,username,email,display_name,google_sub,status,created_at FROM sa_signup_request
+    ORDER BY CASE WHEN status='PENDING' THEN 0 ELSE 1 END,created_at DESC LIMIT 500`);
+  res.json(rows.map(row => ({ id: row.id, username: row.username, email: row.email,
+    displayName: row.display_name, google: Boolean(row.google_sub), status: row.status, createdAt: row.created_at })));
 }));
 
 app.get('/api/admin/overview', requireUser, requireAdmin, asyncRoute(async (_req, res) => {

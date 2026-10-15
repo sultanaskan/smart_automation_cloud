@@ -7,6 +7,7 @@ let currentUser = null;
 let appData = { marketplace: { workflows: [], packages: [] }, subscriptions: [], wallet: { balance: '0.00', ledger: [], topups: [] }, requests: [], release: null, learning: [], admin: null };
 const learningExpanded = {};
 let toastTimer;
+let adminRefreshTimer;
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -98,6 +99,14 @@ function showApp(user) {
   $('#passwordHelp').textContent = user.googleLinked
     ? 'Optional: set a password here if you also want to sign in to the desktop app with your account.'
     : 'For your security, password change signs out all devices.';
+  if (user.role === 'ADMIN' && !adminRefreshTimer) {
+    adminRefreshTimer = setInterval(() => {
+      if (currentUser?.role === 'ADMIN' && $('#admin-signups').classList.contains('active')) refreshAdminSignupRequests();
+    }, 5000);
+  } else if (user.role !== 'ADMIN' && adminRefreshTimer) {
+    clearInterval(adminRefreshTimer);
+    adminRefreshTimer = null;
+  }
 }
 function emptyState(title, detail, className = '') {
   return `<div class="empty-state ${className}"><strong>${escapeHtml(title)}</strong>${escapeHtml(detail || '')}</div>`;
@@ -128,9 +137,29 @@ function renderOverview() {
   $('#overviewLedger').innerHTML = ledger.length ? ledger.map(renderLedgerRow).join('') : emptyState('No wallet activity yet', 'Approved top-ups and purchases will show here.');
 }
 
+function youtubeVideoId(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    let candidate = '';
+    if (host === 'youtu.be') candidate = url.pathname.split('/').filter(Boolean)[0] || '';
+    else if (['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(host)) {
+      if (url.pathname === '/watch') candidate = url.searchParams.get('v') || '';
+      else candidate = url.pathname.match(/^\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})(?:\/|$)/)?.[1] || '';
+    }
+    return /^[A-Za-z0-9_-]{11}$/.test(candidate) ? candidate : '';
+  } catch {
+    return '';
+  }
+}
+
 function renderLearningCard(item) {
+  const videoId = item.contentType === 'VIDEO' ? youtubeVideoId(item.url) : '';
+  const thumbnail = videoId
+    ? `<a class="learning-thumbnail" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" aria-label="Watch ${escapeHtml(item.title)} on YouTube"><img src="https://i.ytimg.com/vi/${videoId}/hqdefault.jpg" alt="Thumbnail: ${escapeHtml(item.title)}" loading="lazy" decoding="async"><span aria-hidden="true">▶</span></a>`
+    : '';
   const details = item.contentType === 'VIDEO'
-    ? `<a class="learning-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a>${item.body ? `<details><summary>Video notes</summary><div class="learning-body">${escapeHtml(item.body)}</div></details>` : ''}`
+    ? `${thumbnail}<a class="learning-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a>${item.body ? `<details><summary>Video notes</summary><div class="learning-body">${escapeHtml(item.body)}</div></details>` : ''}`
     : `<details><summary>${item.contentType === 'TUTORIAL' ? 'Open tutorial' : 'Read post'}</summary><div class="learning-body">${escapeHtml(item.body)}</div>${item.url ? `<a class="learning-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">Open related link ↗</a>` : ''}</details>`;
   return `<article class="learning-card"><div class="learning-card-top"><span class="product-type">${item.contentType === 'VIDEO' ? 'YOUTUBE' : escapeHtml(item.contentType)}</span><small>${escapeHtml(dateText(item.updatedAt || item.createdAt))}</small></div><h4>${escapeHtml(item.title)}</h4>${item.summary ? `<p>${escapeHtml(item.summary)}</p>` : ''}${details}</article>`;
 }
@@ -244,9 +273,7 @@ function renderAdmin() {
   $('#pendingSignupCount').textContent = String((admin.signupRequests || []).filter(item => item.status === 'PENDING').length);
   $('#adminUsers').innerHTML = `<table class="admin-table"><thead><tr><th>User</th><th>Role</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody>${admin.users.map(user => `
     <tr><td><strong>${escapeHtml(user.displayName || user.username)}</strong><small>${escapeHtml(user.username)}</small></td><td>${escapeHtml(user.role)}</td><td>${money(user.balance)}</td><td>${user.active ? 'Active' : 'Disabled'}</td><td><button class="mini-button" data-admin-action="user-transactions" data-id="${escapeHtml(user.id)}">Transactions</button> ${user.id === currentUser.id ? '' : `<button class="mini-button ${user.active ? 'danger' : ''}" data-admin-action="user-status" data-id="${escapeHtml(user.id)}" data-active="${!user.active}">${user.active ? 'Disable' : 'Enable'}</button>`}</td></tr>`).join('')}</tbody></table>`;
-  const signupRequests = admin.signupRequests || [];
-  $('#adminSignupRequests').innerHTML = signupRequests.length ? signupRequests.map(item => `
-    <article class="admin-item"><div class="admin-item-main"><h4>${escapeHtml(item.displayName || item.email)} <span class="state-pill">${item.google ? 'GOOGLE' : 'PUBLIC SIGNUP'}</span></h4><p>${escapeHtml(item.email)}${item.username ? ` · username: ${escapeHtml(item.username)}` : ''}</p><div class="admin-item-meta"><span>${escapeHtml(item.status)}</span><span>Requested ${escapeHtml(dateText(item.createdAt))}</span></div></div><div class="admin-item-actions">${item.status === 'PENDING' ? `<button class="mini-button approve" data-admin-action="signup-review" data-id="${escapeHtml(item.id)}" data-decision="APPROVE">Approve & create account</button><button class="mini-button reject" data-admin-action="signup-review" data-id="${escapeHtml(item.id)}" data-decision="REJECT">Reject</button>` : ''}</div></article>`).join('') : emptyState('No signup requests', 'Google and public signup requests will appear here after users submit them.');
+  renderSignupRequests(admin.signupRequests || []);
   const choices = admin.workflows.filter(item => item.published);
   $('#packageWorkflowChoices').innerHTML = choices.length ? choices.map(item => `<label><input type="checkbox" name="workflowIds" value="${escapeHtml(item.id)}">${escapeHtml(item.name)} <span class="muted">v${escapeHtml(item.version)}</span></label>`).join('') : emptyState('No workflows published', 'Publish a workflow first.');
   const userSelect = $('#grantForm select[name="userId"]');
@@ -263,6 +290,12 @@ function renderAdmin() {
   $('#adminReleases').innerHTML = admin.releases.length ? admin.releases.map(item => `
     <article class="admin-item"><div class="admin-item-main"><h4>Version ${escapeHtml(item.version)} ${item.active ? '<span class="state-pill">CURRENT</span>' : ''}</h4><p>${escapeHtml(item.fileName)} · ${(Number(item.sizeBytes) / (1024 * 1024)).toFixed(1)} MB</p><div class="admin-item-meta"><span>${escapeHtml(dateText(item.createdAt))}</span><span>${escapeHtml(item.changelog)}</span></div></div><div class="admin-item-actions"><button class="mini-button danger" data-admin-action="delete-release" data-id="${escapeHtml(item.id)}">Delete</button></div></article>`).join('') : emptyState('No desktop release', 'Upload an installer to make it available to users.');
   renderAdminLearning(admin.learning || []);
+}
+
+function renderSignupRequests(signupRequests) {
+  $('#pendingSignupCount').textContent = String(signupRequests.filter(item => item.status === 'PENDING').length);
+  $('#adminSignupRequests').innerHTML = signupRequests.length ? signupRequests.map(item => `
+    <article class="admin-item"><div class="admin-item-main"><h4>${escapeHtml(item.displayName || item.email)} <span class="state-pill">${item.google ? 'GOOGLE' : 'PUBLIC SIGNUP'}</span></h4><p>${escapeHtml(item.email)}${item.username ? ` · username: ${escapeHtml(item.username)}` : ''}</p><div class="admin-item-meta"><span>${escapeHtml(item.status)}</span><span>Requested ${escapeHtml(dateText(item.createdAt))}</span></div></div><div class="admin-item-actions">${item.status === 'PENDING' ? `<button class="mini-button approve" data-admin-action="signup-review" data-id="${escapeHtml(item.id)}" data-decision="APPROVE">Approve & create account</button><button class="mini-button reject" data-admin-action="signup-review" data-id="${escapeHtml(item.id)}" data-decision="REJECT">Reject</button>` : ''}</div></article>`).join('') : emptyState('No signup requests', 'Google and public signup requests will appear here after users submit them.');
 }
 
 function renderAdminLearning(items) {
@@ -297,6 +330,18 @@ async function refreshData() {
   renderAll();
 }
 
+async function refreshAdminSignupRequests() {
+  if (currentUser?.role !== 'ADMIN') return;
+  try {
+    const requests = await api('/api/admin/signup-requests');
+    if (appData.admin) appData.admin.signupRequests = requests;
+    renderSignupRequests(requests);
+  } catch (error) {
+    $('#adminSignupRequests').innerHTML = emptyState('Signup requests could not be loaded', error.message);
+    if ($('#admin-signups').classList.contains('active')) toast(`Could not refresh signup requests: ${error.message}`, true);
+  }
+}
+
 function formObject(form) { return Object.fromEntries(new FormData(form).entries()); }
 function setBusy(form, busy) { const button = $('button[type="submit"],button:not([type])', form); if (button) button.disabled = busy; }
 async function withForm(form, action, successMessage) {
@@ -318,14 +363,21 @@ function setupAuth() {
   $('#signupForm').addEventListener('submit', async event => {
     event.preventDefault();
     const form = event.currentTarget;
-    $('#authMessage').textContent = '';
+    const message = $('#authMessage');
+    message.classList.remove('success');
+    if (!form.reportValidity()) {
+      message.textContent = 'Please correct the highlighted fields before sending your request.';
+      return;
+    }
     setBusy(form, true);
+    message.textContent = 'Sending your account request…';
     try {
       const result = await api('/api/auth/signup', { method: 'POST', json: formObject(form) });
       form.reset();
-      $('#authMessage').textContent = result.message;
+      message.classList.add('success');
+      message.textContent = result.message || 'Your account request has been sent for administrator approval.';
     } catch (error) {
-      $('#authMessage').textContent = error.message;
+      message.textContent = error.message || 'The request could not be sent. Please try again.';
     } finally {
       setBusy(form, false);
     }
@@ -543,10 +595,14 @@ function setupNavigation() {
     if (adminButton) {
       $$('.admin-tabs button').forEach(item => item.classList.toggle('active', item === adminButton));
       $$('.admin-section').forEach(section => section.classList.toggle('active', section.id === `admin-${adminButton.dataset.admin}`));
+      if (adminButton.dataset.admin === 'signups') refreshAdminSignupRequests();
     }
     const adminAction = event.target.closest('[data-admin-action]');
     if (adminAction) handleAdminAction(adminAction).catch(error => toast(error.message, true));
-    if (event.target.closest('.refresh-admin')) refreshData().then(() => toast('Admin data refreshed.')).catch(error => toast(error.message, true));
+    if (event.target.closest('.refresh-admin')) {
+      if ($('#admin-signups').classList.contains('active')) refreshAdminSignupRequests();
+      else refreshData().then(() => toast('Admin data refreshed.')).catch(error => toast(error.message, true));
+    }
   });
   $('#marketSearch').addEventListener('input', renderMarketplace);
   $('#logoutButton').addEventListener('click', async () => {
