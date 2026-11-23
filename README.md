@@ -6,7 +6,7 @@ This Node.js service replaces the Java/Tomcat cloud service for accounts, workfl
 
 - Node.js 20 or newer, npm, and MySQL/MariaDB with persistent storage.
 - A host that can run a long-lived Node.js application and route HTTPS traffic to its port.
-- Writable persistent storage for desktop installer releases. Keep `SA_STORAGE_DIR` outside public web roots.
+- Writable persistent storage for sanitized workflow packages and desktop installer releases. Keep `SA_STORAGE_DIR` outside public web roots and on a persistent disk.
 
 ## Local setup
 
@@ -33,7 +33,7 @@ Open `http://localhost:3000/`. The `npm test` command runs the package, money, a
    - `PORT` if required by the host; otherwise the default is 3000.
    - `SA_DB_HOST`, `SA_DB_PORT`, `SA_DB_NAME`, `SA_DB_USER`, `SA_DB_PASSWORD`
    - `SA_BOOTSTRAP_ADMIN`, `SA_BOOTSTRAP_PASSWORD` (minimum 14 characters)
-   - `SA_STORAGE_DIR` as a persistent writable directory outside the public document root.
+   - `SA_STORAGE_DIR` as persistent writable storage outside the public document root. The service creates private `workflows/`, `releases/`, and `tmp/` subdirectories there.
    - `SA_COOKIE_SECURE=true` and `SA_TRUST_PROXY=1` when the host terminates HTTPS in front of Node.
 5. Run `npm install --omit=dev`, then restart the Node application in the hosting panel. Startup logs should show `Initializing MySQL schema and migrations.` followed by `MySQL schema and migrations are ready.` before the listening message. If initialization fails, inspect the Passenger application error log for the `Could not start...` message; check that the configured database exists, the database host is reachable, and its user can create/alter tables. The service creates/updates its tables on startup and creates the first admin only if no active admin already exists.
 6. If Google signup is enabled, create a Google OAuth **Web application** client ID, add each app origin (such as `http://localhost:3000` and your HTTPS domain) under **Authorized JavaScript origins**, and set `SA_GOOGLE_CLIENT_ID` in the app environment. Then route the domain over HTTPS, test `/health`, sign in to `/` with the bootstrap admin, and review new Google signup requests in **Admin → Signup requests**.
@@ -76,10 +76,10 @@ New web endpoints include `/api/me`, `/api/wallet`, `/api/wallet/topups`, `/api/
 
 ## Workflow package handling
 
-The admin panel accepts `.saworkflow` archives only. It validates the archive and `smart-automation-workflow` manifest, stores only a rebuilt `workflow.json`, and clears batch items and asset references. Recorded select/list option definitions stay in the manifest so the desktop can replay selections. Installer binaries are served through an authenticated download route and stored under the private release-storage directory.
+The admin panel accepts `.saworkflow` archives only. It validates the archive and `smart-automation-workflow` manifest, stores only a rebuilt `workflow.json`, and clears batch items and asset references. Recorded select/list option definitions stay in the manifest so the desktop can replay selections. The original archive is temporary; the sanitized package is stored as a versioned file under private `SA_STORAGE_DIR/workflows/`, while MySQL keeps its storage reference and catalog metadata. Package downloads remain behind the entitlement-checked API. Installer binaries are served through an authenticated download route and stored under the private release-storage directory.
 
 ## Database and operational notes
 
-`schema.sql` creates the service tables. Startup applies additive migrations to the existing Java cloud-service tables (`sa_user`, `sa_workflow`, `sa_grant`, and `sa_session`) and adds the marketplace tables. This preserves existing admin accounts, user accounts, workflow packages, manual grants, and session storage. Back up MySQL before replacing a live deployment, and run only one cloud-service version against the database while migrating. Once the Node deployment is verified, stop the old WAR service; its stored data is reused by the Node server.
+`schema.sql` creates the service tables. Startup applies additive migrations to the existing Java cloud-service tables (`sa_user`, `sa_workflow`, `sa_grant`, and `sa_session`) and adds the marketplace tables. Existing workflow blobs are moved to private versioned files before their database copies are cleared. Back up MySQL and `SA_STORAGE_DIR` before replacing a live deployment, and run only one cloud-service version against the database while migrating. Once the Node deployment is verified, stop the old WAR service; its account and access data is reused by the Node server.
 
-Keep both MySQL backups and installer storage persistent. Put the Node app behind HTTPS, set `SA_COOKIE_SECURE=true`, restrict database access to the application, and protect bootstrap credentials. The release-upload maximum is 150 MB and may also be restricted by the hosting panel. Keep software installers and database backups out of public static folders.
+Keep MySQL backups and all of `SA_STORAGE_DIR` persistent. Put the Node app behind HTTPS, set `SA_COOKIE_SECURE=true`, restrict database access to the application, and protect bootstrap credentials. The release-upload maximum is 150 MB and may also be restricted by the hosting panel. Keep workflow packages, software installers, and database backups out of public static folders.

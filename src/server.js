@@ -13,6 +13,9 @@ const { initializeDatabase, pool, withTransaction } = require('./db');
 const { MAX_PAISE, addDays, formatPaisa, parseMoneyToPaise } = require('./money');
 const { sanitizeWorkflowPackage, MAX_PACKAGE_BYTES } = require('./workflow-package');
 const {
+  packageStorageName, readWorkflowPackage, removeWorkflowPackage, writeWorkflowPackage
+} = require('./workflow-storage');
+const {
   asBoolean, asyncRoute, cleanText, hashToken, newCsrfToken, newId, newToken,
   normalizeUsername, passwordHash, passwordMatches, safeEqual, validatePassword
 } = require('./security');
@@ -23,6 +26,7 @@ const TOKEN_LIFETIME_MS = 12 * 60 * 60 * 1000;
 const STORAGE_DIR = path.resolve(process.env.SA_STORAGE_DIR || path.join(__dirname, '..', 'storage'));
 const RELEASE_DIR = path.join(STORAGE_DIR, 'releases');
 const TEMP_DIR = path.join(STORAGE_DIR, 'tmp');
+const WORKFLOW_DIR = path.join(STORAGE_DIR, 'workflows');
 const COOKIE_SECURE = process.env.SA_COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production';
 const ADMIN_WHATSAPP = '01746144544';
 const ADMIN_EMAIL = 'sultanahmedaskan@gmail.com';
@@ -62,6 +66,24 @@ function cleanupUploadedFile(req, res, next) {
   res.once('finish', () => { if (req.file?.path) fs.rm(req.file.path, { force: true }).catch(() => {}); });
   res.once('close', () => { if (req.file?.path) fs.rm(req.file.path, { force: true }).catch(() => {}); });
   next();
+}
+
+async function cleanupStaleUploadFiles(directory) {
+  const staleBefore = Date.now() - 24 * 60 * 60 * 1000;
+  const entries = await fs.readdir(directory, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isFile() || !/^[0-9a-f-]{36}\.upload$/i.test(entry.name)) continue;
+    const filePath = path.join(directory, entry.name);
+    try {
+      const info = await fs.stat(filePath);
+      if (info.mtimeMs < staleBefore) {
+        await fs.rm(filePath, { force: true });
+        console.info(`Removed stale incomplete upload ${entry.name}.`);
+      }
+    } catch (error) {
+      if (error.code !== 'ENOENT') console.warn(`Could not clean stale upload ${entry.name}:`, error.message);
+    }
+  }
 }
 
 const authAttempts = new Map();
@@ -573,16 +595,23 @@ app.get('/api/workflows/:workflowId/package', requireUser, asyncRoute(async (req
   if (!accessRows.length || (!accessRows[0].can_view && !accessRows[0].can_run && !accessRows[0].can_edit)) {
     throw new HttpError(404, 'Workflow access is not active.');
   }
-  const [rows] = await pool.query('SELECT name,version,package_bytes FROM sa_workflow WHERE id=? AND published=TRUE LIMIT 1', [workflowId]);
+  const [rows] = await pool.query('SELECT name,version,package_storage_name FROM sa_workflow WHERE id=? AND published=TRUE LIMIT 1', [workflowId]);
   if (!rows.length) throw new HttpError(404, 'Workflow was removed.');
+  let packageBytes;
+  try { packageBytes = await readWorkflowPackage(STORAGE_DIR, rows[0].package_storage_name, MAX_PACKAGE_BYTES); }
+  catch (error) {
+    console.error(`Could not read stored workflow package ${workflowId}:`, error.message);
+    throw new HttpError(503, 'Workflow package storage is temporarily unavailable.');
+  }
   const safeName = String(rows[0].name).replace(/[^A-Za-z0-9._ -]/g, '_').trim() || 'workflow';
   res.set({
     'Content-Type': 'application/vnd.smartautomation.workflow',
     'Content-Disposition': `attachment; filename="${safeName}.saworkflow"`,
     'X-Workflow-Id': workflowId,
     'X-Workflow-Version': String(rows[0].version),
+    'Content-Length': String(packageBytes.length),
     'Cache-Control': 'private, no-store'
-  }).send(rows[0].package_bytes);
+  }).send(packageBytes);
 }));
 
 app.post('/api/admin/users', requireUser, requireAdmin, asyncRoute(async (req, res) => {
@@ -736,20 +765,42 @@ app.post('/api/admin/workflows', requireUser, requireAdmin, upload.single('packa
   } finally { await fs.rm(req.file.path, { force: true }); }
   const canEdit = req.body?.canEdit === undefined ? true : asBoolean(req.body.canEdit);
   const workflow = await withTransaction(async connection => {
-    const [existing] = await connection.query('SELECT id,version FROM sa_workflow WHERE name=? LIMIT 1 FOR UPDATE', [content.name]);
+    const [existing] = await connection.query('SELECT id,version,package_storage_name FROM sa_workflow WHERE name=? LIMIT 1 FOR UPDATE', [content.name]);
     if (existing.length) {
       const version = Number(existing[0].version) + 1;
-      await connection.query(`UPDATE sa_workflow SET description=?,version=?,package_bytes=?,price_paisa=?,subscription_days=?,
-        marketplace_can_edit=?,published=TRUE,updated_at=CURRENT_TIMESTAMP WHERE id=?`,
-      [content.description, version, content.bytes, price, duration, canEdit, existing[0].id]);
-      return { id: existing[0].id, name: content.name, version };
+      const storageName = packageStorageName(existing[0].id, version);
+      await writeWorkflowPackage(STORAGE_DIR, storageName, content.bytes);
+      try {
+        await connection.query(`UPDATE sa_workflow SET description=?,version=?,package_storage_name=?,package_bytes=NULL,price_paisa=?,subscription_days=?,
+          marketplace_can_edit=?,published=TRUE,updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+        [content.description, version, storageName, price, duration, canEdit, existing[0].id]);
+      } catch (error) {
+        await removeWorkflowPackage(STORAGE_DIR, storageName).catch(cleanupError =>
+          console.warn(`Could not roll back failed workflow package ${storageName}:`, cleanupError.message));
+        throw error;
+      }
+      return { id: existing[0].id, name: content.name, version, previousStorageName: existing[0].package_storage_name, storageName };
     }
     const id = newId();
-    await connection.query(`INSERT INTO sa_workflow(id,name,description,version,package_bytes,price_paisa,subscription_days,marketplace_can_edit,published)
-      VALUES(?,?,?,1,?,?,?,?,TRUE)`, [id, content.name, content.description, content.bytes, price, duration, canEdit]);
-    return { id, name: content.name, version: 1 };
+    const version = 1;
+    const storageName = packageStorageName(id, version);
+    await writeWorkflowPackage(STORAGE_DIR, storageName, content.bytes);
+    try {
+      await connection.query(`INSERT INTO sa_workflow(id,name,description,version,package_storage_name,package_bytes,price_paisa,subscription_days,marketplace_can_edit,published)
+        VALUES(?,?,?,1,?,NULL,?,?,?,TRUE)`, [id, content.name, content.description, storageName, price, duration, canEdit]);
+    } catch (error) {
+      await removeWorkflowPackage(STORAGE_DIR, storageName).catch(cleanupError =>
+        console.warn(`Could not roll back failed workflow package ${storageName}:`, cleanupError.message));
+      throw error;
+    }
+    return { id, name: content.name, version, previousStorageName: null, storageName };
   });
-  res.status(201).json({ ...workflow, price: formatPaisa(price), durationDays: duration, message: `Workflow published as version ${workflow.version}.` });
+  if (workflow.previousStorageName && workflow.previousStorageName !== workflow.storageName) {
+    try { await removeWorkflowPackage(STORAGE_DIR, workflow.previousStorageName); }
+    catch (error) { console.warn(`Could not remove superseded workflow package ${workflow.previousStorageName}:`, error.message); }
+  }
+  res.status(201).json({ id: workflow.id, name: workflow.name, version: workflow.version,
+    price: formatPaisa(price), durationDays: duration, message: `Workflow published as version ${workflow.version}.` });
 }));
 
 app.post('/api/admin/workflows/:workflowId', requireUser, requireAdmin, asyncRoute(async (req, res) => {
@@ -769,8 +820,12 @@ app.post('/api/admin/workflows/:workflowId', requireUser, requireAdmin, asyncRou
 
 app.delete('/api/admin/workflows/:workflowId', requireUser, requireAdmin, asyncRoute(async (req, res) => {
   const id = validId(req.params.workflowId);
+  const [[workflow]] = await pool.query('SELECT package_storage_name FROM sa_workflow WHERE id=? LIMIT 1', [id]);
+  if (!workflow) throw new HttpError(404, 'Workflow was not found.');
   const [result] = await pool.query('DELETE FROM sa_workflow WHERE id=?', [id]);
   if (!result.affectedRows) throw new HttpError(404, 'Workflow was not found.');
+  try { await removeWorkflowPackage(STORAGE_DIR, workflow.package_storage_name); }
+  catch (error) { console.warn(`Workflow ${id} was deleted from the catalog, but its package file could not be removed:`, error.message); }
   res.json({ message: 'Workflow and its grants, package listings, and subscriptions were removed.' });
 }));
 
@@ -980,6 +1035,8 @@ async function start() {
   }
   await fs.mkdir(TEMP_DIR, { recursive: true });
   await fs.mkdir(RELEASE_DIR, { recursive: true });
+  await fs.mkdir(WORKFLOW_DIR, { recursive: true, mode: 0o700 });
+  await cleanupStaleUploadFiles(TEMP_DIR);
   console.info('Initializing MySQL schema and migrations.');
   await initializeDatabase();
   console.info('MySQL schema and migrations are ready.');
