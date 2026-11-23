@@ -1,0 +1,44 @@
+:root { font-family: Outfit, "Segoe UI", sans-serif; color: #252a35; background: #f7f7fa; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { min-width: 320px; min-height: 100vh; margin: 0; background: #f7f7fa; }
+.page-shell { min-height: 100vh; }
+.topbar { display: flex; height: 70px; align-items: center; gap: 11px; padding: 0 max(24px, calc((100% - 1080px) / 2)); border-bottom: 1px solid #ececf1; background: #fff; }
+.brand-mark { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; color: #fff; background: #ff671f; font-size: 13px; font-weight: 800; }
+.brand-name { font-size: 14px; font-weight: 700; }
+.demo-tag { margin-left: auto; padding: 6px 9px; border-radius: 999px; color: #65728a; background: #f0f2f6; font-size: 9px; font-weight: 700; letter-spacing: .1em; }
+.main-content { width: min(760px, calc(100% - 32px)); margin: 62px auto 0; }
+.notice-card { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 18px; padding: 13px 16px; border: 1px solid #e8e8ef; border-radius: 12px; background: #fff; }
+.notice-icon { display: grid; flex: 0 0 20px; height: 20px; place-items: center; border-radius: 50%; color: #fff; background: #565ba2; font-size: 12px; font-weight: 700; }
+.notice-card p { margin: 1px 0 0; color: #697183; font-size: 12px; line-height: 1.5; }
+.upload-card { width: min(100%, 696px); margin: 0 auto; padding: 28px; border-radius: 14px; background: #fff; box-shadow: 0 8px 30px #1d27400d; }
+.applicant-count { margin-bottom: 22px; color: #727886; font-size: 17px; font-weight: 700; }
+.upload-list { display: grid; gap: 15px; }
+.applicant-upload.w-full { width: 100%; }
+.upload-drop-area.w-full { width: 100%; height: 56px; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 0 16px; border: 3px dashed #d5d6e3; border-radius: 24px; background: #fff; cursor: pointer; transition: border-color .18s, background .18s, box-shadow .18s; }
+.upload-drop-area:hover, .upload-drop-area:focus-visible { border-color: #777bb0; background: #fffaf3; outline: none; box-shadow: 0 0 0 3px #777bb01c; }
+.upload-drop-area svg { width: 20px; height: 20px; flex: 0 0 20px; fill: none; stroke: #ff671f; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.upload-drop-area label { color: #252a35; font-size: 16px; line-height: 1; cursor: pointer; }
+.hidden.sf-hidden { display: none !important; }
+.upload-help { margin-top: 14px; padding: 15px 16px; border: 1px solid #ff671f33; border-radius: 12px; background: #fef8ee; }
+.upload-help p { margin: 0; color: #575967; font-size: 12px; line-height: 1.55; }
+.upload-help p + p { margin-top: 5px; }
+.upload-help strong { color: #d94e11; }
+.upload-result { min-height: 16px; margin-top: 9px; color: #9698a2; font-size: 11px; }
+.is-scanning .upload-drop-area { border-color: #f0a77f; background: #fffaf5; cursor: wait; }
+.is-scanning .upload-result { color: #a85a32; }
+.is-accepted .upload-drop-area { border-color: #8dc9a4; background: #f6fcf8; cursor: default; }
+.is-accepted .upload-drop-area label { color: #287247; }
+.is-accepted .upload-drop-area svg { stroke: #31925b; }
+.is-accepted .upload-result { color: #287247; }
+.is-rejected .upload-drop-area { border-color: #e3a39d; background: #fff8f7; }
+.is-rejected .upload-result { color: #b64c45; }
+.server-status { min-height: 20px; margin: 18px 0 14px; color: #89909e; font-size: 12px; }
+.server-status.checking { color: #a85a32; }
+.server-status.success { color: #287247; }
+.server-status.error { color: #b64c45; }
+.confirm-button { display: flex; width: 100%; min-height: 56px; align-items: center; justify-content: center; gap: 14px; padding: 9px 20px; border: 0; border-radius: 999px; color: #fff; background: #ff671f; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .18s, opacity .18s; }
+.confirm-button:hover:not(:disabled) { background: #ed5a17; }
+.confirm-button:disabled { opacity: .48; cursor: not-allowed; }
+.button-arrow { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: #ff671f; background: #fff; font-size: 20px; line-height: 1; }
+.page-footnote { margin: 15px auto; color: #8c929f; font-size: 10px; line-height: 1.6; text-align: center; }
+@media (max-width: 560px) { .topbar { height: 60px; padding: 0 16px; } .brand-name { font-size: 12px; } .main-content { margin-top: 30px; } .upload-card { padding: 18px 15px; } .applicant-count { font-size: 15px; } .upload-drop-area.w-full { height: 50px; gap: 6px; padding: 0 8px; } .upload-drop-area label { font-size: 13px; } .upload-help { padding: 12px; } }

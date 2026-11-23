@@ -76,7 +76,19 @@ function showAuth(message = '') {
   csrfToken = '';
   $('#appShell').hidden = true;
   $('#authScreen').hidden = false;
+  showAuthPanel('login');
   $('#authMessage').textContent = message;
+}
+function showAuthPanel(view) {
+  const signingUp = view === 'signup';
+  $('#loginPanel').hidden = signingUp;
+  $('#signupPanel').hidden = !signingUp;
+  if (signingUp) {
+    $('#signupForm').hidden = false;
+    $('#signupComplete').hidden = true;
+  }
+  $('#authMessage').textContent = '';
+  $('#authMessage').classList.remove('success');
 }
 function showApp(user) {
   currentUser = user;
@@ -295,7 +307,7 @@ function renderAdmin() {
 function renderSignupRequests(signupRequests) {
   $('#pendingSignupCount').textContent = String(signupRequests.filter(item => item.status === 'PENDING').length);
   $('#adminSignupRequests').innerHTML = signupRequests.length ? signupRequests.map(item => `
-    <article class="admin-item"><div class="admin-item-main"><h4>${escapeHtml(item.displayName || item.email)} <span class="state-pill">${item.google ? 'GOOGLE' : 'PUBLIC SIGNUP'}</span></h4><p>${escapeHtml(item.email)}${item.username ? ` · username: ${escapeHtml(item.username)}` : ''}</p><div class="admin-item-meta"><span>${escapeHtml(item.status)}</span><span>Requested ${escapeHtml(dateText(item.createdAt))}</span></div></div><div class="admin-item-actions">${item.status === 'PENDING' ? `<button class="mini-button approve" data-admin-action="signup-review" data-id="${escapeHtml(item.id)}" data-decision="APPROVE">Approve & create account</button><button class="mini-button reject" data-admin-action="signup-review" data-id="${escapeHtml(item.id)}" data-decision="REJECT">Reject</button>` : ''}</div></article>`).join('') : emptyState('No signup requests', 'Google and public signup requests will appear here after users submit them.');
+    <article class="admin-item"><div class="admin-item-main"><h4>${escapeHtml(item.displayName || item.email)} <span class="state-pill">${item.google ? 'GOOGLE' : 'REGISTRATION'}</span></h4><p>${escapeHtml(item.email)}${item.username ? ` · username: ${escapeHtml(item.username)}` : ''}</p><div class="admin-item-meta"><span>${item.status === 'PENDING' ? 'DRAFT · PENDING REVIEW' : escapeHtml(item.status)}</span><span>Requested ${escapeHtml(dateText(item.createdAt))}</span></div></div><div class="admin-item-actions">${item.status === 'PENDING' ? `<button class="mini-button approve" data-admin-action="signup-review" data-id="${escapeHtml(item.id)}" data-decision="APPROVE">Approve & enable account</button><button class="mini-button reject" data-admin-action="signup-review" data-id="${escapeHtml(item.id)}" data-decision="REJECT">Reject registration</button>` : ''}</div></article>`).join('') : emptyState('No registration requests', 'New draft registrations will appear here for review.');
 }
 
 function renderAdminLearning(items) {
@@ -352,6 +364,10 @@ async function withForm(form, action, successMessage) {
 }
 
 function setupAuth() {
+  document.querySelectorAll('[data-auth-view]').forEach(link => link.addEventListener('click', event => {
+    event.preventDefault();
+    showAuthPanel(link.dataset.authView);
+  }));
   $('#loginForm').addEventListener('submit', event => {
     event.preventDefault(); const values = formObject(event.currentTarget); $('#authMessage').textContent = '';
     withForm(event.currentTarget, async () => {
@@ -374,8 +390,13 @@ function setupAuth() {
     try {
       const result = await api('/api/auth/signup', { method: 'POST', json: formObject(form) });
       form.reset();
-      message.classList.add('success');
-      message.textContent = result.message || 'Your account request has been sent for administrator approval.';
+      const requestText = 'I completed a Smart Automation account registration and would like to ask about enabling my account.';
+      const phone = String($('#authWhatsApp').href).split('/').pop().split('?')[0];
+      $('#signupWhatsApp').href = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(requestText)}`;
+      $('#signupEmail').href = `mailto:${encodeURIComponent($('#authEmail').textContent.replace(/^Email:\s*/i, ''))}?subject=${encodeURIComponent('Smart Automation account approval')}&body=${encodeURIComponent(requestText)}`;
+      $('#signupForm').hidden = true;
+      $('#signupComplete').hidden = false;
+      message.textContent = '';
     } catch (error) {
       message.textContent = error.message || 'The request could not be sent. Please try again.';
     } finally {
@@ -392,6 +413,8 @@ async function setupGoogleAuth() {
   $('#authWhatsApp').textContent = `WhatsApp: ${config.adminWhatsApp}`;
   $('#authEmail').href = `mailto:${encodeURIComponent(config.adminEmail)}`;
   $('#authEmail').textContent = `Email: ${config.adminEmail}`;
+  $('#signupWhatsApp').href = `https://wa.me/${encodeURIComponent(whatsappNumber)}`;
+  $('#signupEmail').href = `mailto:${encodeURIComponent(config.adminEmail)}`;
   if (!config.googleClientId) {
     $('#googleSignInNote').textContent = 'Google account signup and sign-in will be available after the administrator configures Google OAuth.';
     $('#googleSignIn').hidden = true;

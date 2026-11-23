@@ -198,11 +198,11 @@ app.post('/api/auth/signup', limitAuthAttempts, asyncRoute(async (req, res) => {
   if (registeredEmail) throw new HttpError(409, 'This email already has an account request that was approved. Please sign in or contact the administrator.');
   const [[pending]] = await pool.query(`SELECT id FROM sa_signup_request WHERE status='PENDING' AND (username=? OR email=?)
     ORDER BY created_at DESC LIMIT 1`, [username, email]);
-  if (pending) return res.status(202).json({ status: 'PENDING', message: 'An account request for this username or email is already waiting for review.' });
+  if (pending) return res.status(202).json({ status: 'PENDING', accountStatus: 'DRAFT', message: 'Your draft registration is waiting for administrator review.' });
   const id = newId();
   await pool.query(`INSERT INTO sa_signup_request(id,username,email,display_name,password_hash,status)
     VALUES(?,?,?,?,?,'PENDING')`, [id, username, email, displayName, await passwordHash(password)]);
-  res.status(202).json({ status: 'PENDING', message: 'Your account request has been sent. You can sign in after the administrator approves it.' });
+  res.status(202).json({ status: 'PENDING', accountStatus: 'DRAFT', message: 'Your draft registration is saved. Contact the administrator to request account approval.' });
 }));
 
 app.post('/api/auth/google', limitAuthAttempts, asyncRoute(async (req, res) => {
@@ -639,7 +639,7 @@ app.post('/api/admin/signup-requests/:requestId/review', requireUser, requireAdm
     await connection.query(`UPDATE sa_signup_request SET status='APPROVED',password_hash=NULL,reviewed_by=?,reviewed_at=UTC_TIMESTAMP() WHERE id=?`, [req.auth.id, requestId]);
     return { status: 'APPROVED', username, googleLinked: Boolean(request.google_sub) };
   });
-  res.json({ ...result, message: decision === 'APPROVE' ? `Signup approved. The user can now sign in${result.googleLinked ? ' with the same Google account' : ' with the requested username and password'}.` : 'Signup request rejected.' });
+  res.json({ ...result, message: decision === 'APPROVE' ? `Registration approved and account enabled. The user can now sign in${result.googleLinked ? ' with the same Google account' : ' with the requested username and password'}.` : 'Registration rejected.' });
 }));
 
 app.get('/api/admin/signup-requests', requireUser, requireAdmin, asyncRoute(async (_req, res) => {
@@ -980,7 +980,9 @@ async function start() {
   }
   await fs.mkdir(TEMP_DIR, { recursive: true });
   await fs.mkdir(RELEASE_DIR, { recursive: true });
+  console.info('Initializing MySQL schema and migrations.');
   await initializeDatabase();
+  console.info('MySQL schema and migrations are ready.');
   await bootstrapAdmin();
   const server = app.listen(PORT, () => console.info(`Smart Automation cloud service listening on port ${PORT}.`));
   const shutdown = () => server.close(() => pool.end().finally(() => process.exit(0)));
@@ -988,7 +990,10 @@ async function start() {
   process.once('SIGTERM', shutdown);
 }
 
-if (require.main === module) {
+const runningUnderPassenger = typeof PhusionPassenger !== 'undefined'
+  || Boolean(process.env.PASSENGER_APP_ENV || process.env.PASSENGER_INSTANCE_REGISTRY_DIR);
+
+if (require.main === module || runningUnderPassenger) {
   start().catch(error => {
     console.error('Could not start Smart Automation cloud service:', error.message);
     process.exitCode = 1;

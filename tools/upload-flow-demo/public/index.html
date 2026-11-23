@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Indian Visa Application Center — Upload Demo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">IV</div>
+      <div class="brand-name">Indian Visa Application Center</div>
+      <span class="demo-tag">LOCAL TEST PAGE</span>
+    </header>
+
+    <main class="main-content">
+      <div class="notice-card">
+        <span class="notice-icon" aria-hidden="true">i</span>
+        <p>Upload each applicant's web file. The next upload field appears only after the server finishes checking the previous PDF.</p>
+      </div>
+
+      <section class="upload-card" aria-label="Applicant web file upload">
+        <div id="applicant-count" class="applicant-count">Total number of applicants: 0</div>
+        <div id="upload-list" class="upload-list"></div>
+        <div id="server-status" class="server-status" role="status" aria-live="polite">Waiting for the primary applicant's file.</div>
+        <button id="confirm" class="confirm-button" type="button" disabled>
+          <span>Confirm All Information is Correct</span>
+          <span class="button-arrow" aria-hidden="true">→</span>
+        </button>
+      </section>
+
+      <p class="page-footnote">Local test only. Files are held in memory for the simulated server check and are not saved.</p>
+    </main>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

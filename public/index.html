@@ -13,23 +13,45 @@
   <section id="authScreen" class="auth-shell" hidden>
     <div class="auth-brand">
       <div class="brand-mark">SA</div><p class="eyebrow">SMART AUTOMATION · CLOUD</p>
-      <h1>Your workflows,<br><span>ready when you are.</span></h1>
-      <p class="muted auth-copy">Manage your account, subscriptions, wallet, and desktop access from one secure workspace.</p>
-      <div class="auth-note"><span class="status-dot"></span> Your batch data and uploaded workflow files stay on your computer.</div>
+      <h1>A calmer way<br>to manage <span>automation.</span></h1>
+      <p class="muted auth-copy">One place for your workflow access, account details and desktop app.</p>
+      <div class="auth-note"><span class="status-dot"></span><span><strong>Your work stays yours</strong><br>Batch data and uploaded files remain on your computer.</span></div>
     </div>
     <div class="auth-card">
-      <form id="loginForm" class="stack-form">
-        <h2>Welcome back</h2><p class="muted">Sign in with your approved username and password.</p>
-        <label>Username<input name="username" autocomplete="username" required minlength="3" maxlength="80"></label>
-        <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
-        <button class="button primary wide">Sign in <span>→</span></button>
-      </form>
-      <div class="auth-divider"><span>OR</span></div>
-      <div id="googleSignIn" class="google-signin" aria-label="Continue with Google"></div>
-      <p id="googleSignInNote" class="tiny muted">Request a new account using your Google account. The administrator must approve it before you can sign in.</p>
-      <details class="public-signup"><summary>Create a new account request</summary><form id="signupForm" class="stack-form compact-form" novalidate><label>Full name<input name="displayName" required maxlength="120" autocomplete="name"></label><label>Username<input name="username" required minlength="3" maxlength="80" autocomplete="username" pattern="[A-Za-z0-9._-]+" title="Use letters, numbers, dots, underscores, or hyphens"></label><label>Gmail / email<input name="email" type="email" required maxlength="254" autocomplete="email"></label><label>Password<input name="password" type="password" required minlength="12" maxlength="72" autocomplete="new-password"></label><button type="submit" class="button primary wide">Send account request <span>→</span></button><p class="tiny muted">The account is created only after administrator approval. Your password is stored as a secure hash.</p></form></details>
+      <div id="loginPanel" class="auth-panel">
+        <form id="loginForm" class="stack-form">
+          <p class="eyebrow">ACCOUNT ACCESS</p><h2>Welcome back</h2><p class="muted">Sign in with the account approved for you.</p>
+          <label>Username<input name="username" autocomplete="username" required minlength="3" maxlength="80"></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="button primary wide">Sign in <span>→</span></button>
+        </form>
+        <div class="auth-divider"><span>OR</span></div>
+        <div id="googleSignIn" class="google-signin" aria-label="Continue with Google"></div>
+        <p id="googleSignInNote" class="tiny muted">Use your approved Google account to sign in.</p>
+        <p class="auth-switch">New here? <a class="text-button" href="#register" data-auth-view="signup">Register</a></p>
+      </div>
+      <div id="signupPanel" class="auth-panel" hidden>
+        <form id="signupForm" class="stack-form compact-form" novalidate>
+          <p class="eyebrow">NEW ACCOUNT</p><h2>Register</h2><p class="muted">Create a registration request. The administrator enables accounts after review.</p>
+          <label>Full name<input name="displayName" required maxlength="120" autocomplete="name"></label>
+          <label>Username<input name="username" required minlength="3" maxlength="80" autocomplete="username" pattern="[A-Za-z0-9._-]+" title="Use letters, numbers, dots, underscores, or hyphens"></label>
+          <label>Email address<input name="email" type="email" required maxlength="254" autocomplete="email"></label>
+          <label>Create password<input name="password" type="password" required minlength="12" maxlength="72" autocomplete="new-password"><small class="field-hint">At least 12 characters. You can sign in after approval.</small></label>
+          <button type="submit" class="button primary wide">Complete registration <span>→</span></button>
+          <p class="tiny muted">Your registration stays a draft request until the administrator approves it. Passwords are stored as secure hashes.</p>
+        </form>
+        <div id="signupComplete" class="signup-complete" hidden>
+          <span class="signup-check" aria-hidden="true">✓</span>
+          <p class="eyebrow">REQUEST SAVED</p><h2>Registration complete</h2>
+          <p>Your account is currently a <strong>draft</strong>. You can sign in after an administrator reviews and enables it.</p>
+          <div class="approval-steps"><span>01</span><div><strong>Contact the administrator</strong><small>Let them know you submitted a registration request.</small></div></div>
+          <div class="approval-steps"><span>02</span><div><strong>Wait for approval</strong><small>The administrator can approve or reject it from the admin panel.</small></div></div>
+          <div class="signup-contact-actions"><a id="signupWhatsApp" class="button secondary" href="https://wa.me/880174614544" target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a><a id="signupEmail" class="button subtle" href="mailto:sultanahmedaskan@gmail.com">Email administrator</a></div>
+        </div>
+        <p class="auth-switch">Already have an account? <a class="text-button" href="#login" data-auth-view="login">Sign in</a></p>
+      </div>
       <p id="authMessage" class="form-message" aria-live="polite"></p>
-      <div class="auth-support"><strong>Contact the administrator</strong><a id="authWhatsApp" href="https://wa.me/880174614544" target="_blank" rel="noopener noreferrer">WhatsApp: 01746144544</a><a id="authEmail" href="mailto:sultanahmedaskan@gmail.com">Email: sultanahmedaskan@gmail.com</a></div>
+      <div class="auth-support"><span>Need help?</span><a id="authWhatsApp" href="https://wa.me/880174614544" target="_blank" rel="noopener noreferrer">WhatsApp: 01746144544</a><a id="authEmail" href="mailto:sultanahmedaskan@gmail.com">Email: sultanahmedaskan@gmail.com</a></div>
     </div>
   </section>
 
@@ -98,11 +120,11 @@
 
       <section id="view-admin" class="view">
         <div class="section-intro admin-intro"><div><p class="eyebrow">CONTROL CENTER</p><h2>Admin console</h2><p class="muted">Manage accounts, listings, wallet reviews, access, and desktop releases.</p></div><span class="admin-badge">ADMIN ACCESS</span></div>
-        <div class="admin-tabs" id="adminTabs"><button class="active" data-admin="users">Users</button><button data-admin="signups">Signup requests <b id="pendingSignupCount">0</b></button><button data-admin="listings">Marketplace</button><button data-admin="learning">Learning content</button><button data-admin="topups">Wallet reviews <b id="pendingTopupCount">0</b></button><button data-admin="requests">Package requests <b id="pendingRequestCount">0</b></button><button data-admin="grants">Access grants</button><button data-admin="releases">Desktop releases</button></div>
+        <div class="admin-tabs" id="adminTabs"><button class="active" data-admin="users">Users</button><button data-admin="signups">Registrations <b id="pendingSignupCount">0</b></button><button data-admin="listings">Marketplace</button><button data-admin="learning">Learning content</button><button data-admin="topups">Wallet reviews <b id="pendingTopupCount">0</b></button><button data-admin="requests">Package requests <b id="pendingRequestCount">0</b></button><button data-admin="grants">Access grants</button><button data-admin="releases">Desktop releases</button></div>
 
         <div id="admin-users" class="admin-section active"><div class="content-grid two-col"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">CREATE ACCOUNT</p><h3>Add a user</h3></div></div><form id="adminUserForm" class="stack-form compact-form"><div class="form-pair"><label>Username<input name="username" required minlength="3" maxlength="80"></label><label>Role<select name="role"><option value="MEMBER">Member</option><option value="ADMIN">Admin</option></select></label></div><label>Display name<input name="displayName" maxlength="120"></label><label>Temporary password<input name="password" type="password" minlength="12" required></label><button class="button primary">Create account</button></form></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">ACCOUNT DIRECTORY</p><h3>Users</h3></div><button class="icon-button refresh-admin" title="Refresh users">↻</button></div><div id="adminUsers" class="table-wrap"></div></article></div></div>
 
-        <div id="admin-signups" class="admin-section"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">ACCOUNT REQUEST APPROVAL</p><h3>Signup requests</h3></div><button class="icon-button refresh-admin" title="Refresh signup requests">↻</button></div><p class="muted">Review public signup form and Google requests. Approval creates the account and wallet; users can sign in after approval.</p><div id="adminSignupRequests" class="admin-card-list"></div></article></div>
+        <div id="admin-signups" class="admin-section"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">DRAFT ACCOUNT REVIEW</p><h3>Registration requests</h3></div><button class="icon-button refresh-admin" title="Refresh registration requests">↻</button></div><p class="muted">New registrations remain draft requests until reviewed. Approve to create and enable the account, or reject the request.</p><div id="adminSignupRequests" class="admin-card-list"></div></article></div>
 
         <div id="admin-listings" class="admin-section"><div class="content-grid two-col"><article class="panel"><div class="panel-heading"><div><p class="eyebrow">PUBLISH A WORKFLOW</p><h3>Upload a workflow listing</h3></div></div><form id="publishWorkflowForm" class="stack-form compact-form" enctype="multipart/form-data"><label>Workflow package<input name="packageFile" type="file" accept=".saworkflow,.zip" required></label><div class="form-pair"><label>Display name <span class="optional">Optional</span><input name="name" maxlength="200"></label><label>Price (BDT)<input name="price" type="number" min="0" step="0.01" value="0" required></label></div><label>Description<textarea name="description" rows="3" maxlength="4000"></textarea></label><div class="form-pair"><label>Subscription days<input name="durationDays" type="number" min="1" max="3650" value="30" required></label><label class="check-label"><input name="canEdit" type="checkbox" checked> Subscribers may edit</label></div><button class="button primary">Publish workflow</button><p class="tiny muted">Batch items and uploaded files are stripped before the definition is published.</p></form></article><article class="panel"><div class="panel-heading"><div><p class="eyebrow">CREATE A BUNDLE</p><h3>Publish a package</h3></div></div><form id="adminPackageForm" class="stack-form compact-form"><label>Package name<input name="name" maxlength="200" required></label><label>Description<textarea name="description" rows="2" maxlength="4000"></textarea></label><div class="form-pair"><label>Price (BDT)<input name="price" type="number" min="0" step="0.01" required></label><label>Subscription days<input name="durationDays" type="number" min="1" max="3650" value="30" required></label></div><label class="check-label"><input name="canEdit" type="checkbox" checked> Subscribers may edit included workflows</label><label>Include published workflows</label><div id="packageWorkflowChoices" class="choice-list"></div><button class="button primary">Publish package</button></form></article></div><article class="panel admin-list-panel"><div class="panel-heading"><div><p class="eyebrow">LIVE CATALOG</p><h3>Manage marketplace listings</h3></div><button class="icon-button refresh-admin" title="Refresh listings">↻</button></div><div id="adminListings" class="admin-card-list"></div></article></div>
 

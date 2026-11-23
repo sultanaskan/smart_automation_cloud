@@ -27,7 +27,7 @@ Open `http://localhost:3000/`. The `npm test` command runs the package, money, a
 
 1. Create a MySQL database and a database user with permissions on that database.
 2. Upload the contents of `cloud-server-node/` to the Node application directory, excluding `.env`, `node_modules`, `storage`, and local development files.
-3. Set the application start file to `src/server.js` or the start command to `npm start`. Use Node 20+.
+3. Use Node 20+. For Webuzo/Passenger, set the startup file to `src/server.js`; the server detects Passenger and starts even though Passenger loads the file with `require()`. For a shell-managed process, use `npm start`.
 4. Configure these environment variables in the host's Node application settings:
    - `NODE_ENV=production`
    - `PORT` if required by the host; otherwise the default is 3000.
@@ -35,7 +35,7 @@ Open `http://localhost:3000/`. The `npm test` command runs the package, money, a
    - `SA_BOOTSTRAP_ADMIN`, `SA_BOOTSTRAP_PASSWORD` (minimum 14 characters)
    - `SA_STORAGE_DIR` as a persistent writable directory outside the public document root.
    - `SA_COOKIE_SECURE=true` and `SA_TRUST_PROXY=1` when the host terminates HTTPS in front of Node.
-5. Run `npm install --omit=dev`, then start/restart the Node application in the hosting panel. The service creates/updates its tables on startup and creates the first admin only if no active admin already exists.
+5. Run `npm install --omit=dev`, then restart the Node application in the hosting panel. Startup logs should show `Initializing MySQL schema and migrations.` followed by `MySQL schema and migrations are ready.` before the listening message. If initialization fails, inspect the Passenger application error log for the `Could not start...` message; check that the configured database exists, the database host is reachable, and its user can create/alter tables. The service creates/updates its tables on startup and creates the first admin only if no active admin already exists.
 6. If Google signup is enabled, create a Google OAuth **Web application** client ID, add each app origin (such as `http://localhost:3000` and your HTTPS domain) under **Authorized JavaScript origins**, and set `SA_GOOGLE_CLIENT_ID` in the app environment. Then route the domain over HTTPS, test `/health`, sign in to `/` with the bootstrap admin, and review new Google signup requests in **Admin → Signup requests**.
 
 Host-specific application paths and environment-variable screens vary. Do not upload the local desktop SQLite database, `.env`, Chrome profile, or private workflow batch values to the hosting account.
